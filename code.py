@@ -1,6 +1,7 @@
 
 import time
 import board
+import gc
 import digitalio
 import analogio
 import usb_hid
@@ -11,18 +12,7 @@ from adafruit_hid.keyboard import Keyboard
 from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS
 from adafruit_hid.keycode import Keycode
 
-
-# A simple neat keyboard demo in CircuitPython
-print('foo')
-
-# The pins we'll use, each will have an internal pullup
-# KEEB_PINS = (12, 13, 14, 15,
-#              19, 18, 17, 16)
-# BATTERY_PIN = board.GP28
-
-# KEEBP_PINS = [board.GP12, board.GP13, board.GP14, board.GP15,
-#         board.GP19, board.GP18, board.GP17, board.GP16]
-
+POLL_FREQUENCY = 200.0
 HOLDTIME = 250
 # ONESHOT_TIMEOUT = 500
 BASE_LAYER = 0
@@ -41,27 +31,35 @@ def to_volts(reading):
     return reading * 2 * 3.3 / 65536
 
 
+def time_ms():
+    '''simple ns to ms'''
+    return int(time.monotonic_ns() / 1000000)
+
+
 def get_output_key(buttons, layer, tap):
     '''takes the current layer and pressed buttons and figures out 
     what output key should be sent.  If a new layer should be set.'''
 
-    #print('foo buttons:', buttons, 'layer:', layer, 'tap:', tap)
-
-    # buttons = [PINS.index(b) for b in buttons]
-    print('modified:', buttons)
+    #print('buttons:', buttons, 'layer:', layer, 'tap:', tap)
+    
+    # mapped_buttons are the keys on the current layer corresponding
+    # to the pressed buttons.
     mapped_buttons = [LAYERS[layer][b] for b in buttons]
+    
+    # If it was a tap, we ignore any hold-for-layer keys and get the tap behavior.
     if len(mapped_buttons) > 1 or tap:
         # convert any hold-tap layer keys to just the (tap) key
-        mapped_buttons = [b if isinstance(b, str) else b[1] for b in mapped_buttons]
+        mapped_buttons = [b if isinstance(b, str) else b[1] 
+                            for b in mapped_buttons]
         mapped_buttons = tuple(sorted(mapped_buttons))
+        
+        # Multuple buttons pressed, translate chord to output key
         if len(mapped_buttons) > 1:
-            result = CHORDS.get(mapped_buttons, None)
-            #print("RESULT:", result)
-            if isinstance(result, str):
-                result = result, None
-            if result is None:
-                result = None, None
+            result = CHORDS.get(mapped_buttons, (None, None))
+            assert isinstance(result, tuple)
+            
         else:
+            # Not a chord
             result = mapped_buttons[0], None
 
     else:
@@ -73,11 +71,8 @@ def get_output_key(buttons, layer, tap):
     #print(f'get output key: {buttons}, {layer}, {tap}, {result}')
     return result
 
-def time_ms():
-    '''simple ns to ms'''
-    return int(time.monotonic_ns() / 1000000)
 
-def poll_keys(buttons_pressed, device):
+def activate_keys(buttons_pressed, device):
     '''preserves history of buttons already pressed.
     '''
     global TICKER  
@@ -117,9 +112,9 @@ def poll_keys(buttons_pressed, device):
 
             tap =  clock - TICKER < HOLDTIME
 
-            print(f'{(len(PENDING_BUTTONS), len(buttons_pressed), clock, TICKER, clock-TICKER)}')
+            # print(f'{(len(PENDING_BUTTONS), len(buttons_pressed), clock, TICKER, clock-TICKER)}')
             output_key, new_layer = get_output_key(PENDING_BUTTONS, current_layer, tap)
-            print(f'output_key: {output_key}, new_layer: {new_layer}')
+            # print(f'output_key: {output_key}, new_layer: {new_layer}')
 
             if output_key == '_set_base':
                 BASE_LAYER = new_layer
@@ -161,22 +156,21 @@ def poll_keys(buttons_pressed, device):
                             'uinput_codes': []
                         }
 
-            print(f'New event: {new_event}')
+            # print(f'New event: {new_event}')
             EVENTS.append(new_event)
             PENDING_BUTTONS.clear()
             TICKER = 0
 
-    # Unpress ended events
+    # Relase keys for ended events
     for event in EVENTS:
         if event['status'] != 'released':
             continue
 
         for uinput_code in event['uinput_codes'][::-1]:
-            print('unpressing', uinput_code)
+            print('    device release', uinput_code)
             device.release(uinput_code)
-            # time.sleep(0.01)
         event['status'] = 'delete'
-        print(event)
+        # print(event)
 
     # Delete done events
     EVENTS = [e for e in EVENTS if e['status'] != 'delete']
@@ -197,8 +191,8 @@ def poll_keys(buttons_pressed, device):
 
         uinput_codes = [KEYMAP_TRANSLATE[k] for k in effective_keys
                             if k and k is not None]
-        print('effective_keys:', effective_keys)
-        print('uinput_codes:', uinput_codes)
+        # print('effective_keys:', effective_keys)
+        # print('uinput_codes:', uinput_codes)
         unpress_later = []
         for uinput_code in uinput_codes:
             # if isinstance(uinput_code[0], tuple):
@@ -211,25 +205,29 @@ def poll_keys(buttons_pressed, device):
             unpress_later.append(keep)
 
             for temp_code in temp_codes:
-                print('temp press', temp_code)
+                print('    device press', temp_code)
                 device.press(temp_code)
                 time.sleep(0.01)
 
-            print('pressing', keep)
+            print('    device press', keep)
             device.press(keep)
             time.sleep(0.01)
             for temp_code in temp_codes:
-                print('temp unpress', temp_code)
+                print('    device release', temp_code)
                 device.release(temp_code)
                 time.sleep(0.01)
         last_event['uinput_codes'] = unpress_later
 
 
+##############################################################################
+# Main loop
+##############################################################################
 time.sleep(1)  # Sleep for a bit to avoid a race condition on some systems
 
 keyboard = Keyboard(usb_hid.devices)
-keyboard_layout = KeyboardLayoutUS(keyboard)  # We're in the US :)
+keyboard_layout = KeyboardLayoutUS(keyboard)
 
+# Initialize the key pins and analog battery pin
 key_pins = []
 for pin in PINS:
     key_pin = digitalio.DigitalInOut(pin)
@@ -238,38 +236,48 @@ for pin in PINS:
     key_pins.append(key_pin)
 
 battery_pin = analogio.AnalogIn(BATTERY_PIN)
-print('voltage:', battery_pin.value, to_volts(battery_pin.value))
-# For most CircuitPython boards:
-led = digitalio.DigitalInOut(board.LED)
-# For QT Py M0:
-# led = digitalio.DigitalInOut(board.SCK)
-led.direction = digitalio.Direction.OUTPUT
 
-print("Waiting for key pin...")
-last_voltage_report_time = time.monotonic()
+# Event tracking variables for in loop
+last_voltage_report_time = 0
 previously_pressed = None
 pressed_time = None
 pressed_toggle = False
+counter = 0
 
-while True:
+while True: 
+    counter += 1
     current_time = time.monotonic()
-    if current_time - last_voltage_report_time > 15:
-        print('voltage:', battery_pin.value, to_volts(battery_pin.value))
-        last_voltage_report_time = current_time
-
+    
     # Check each pin
     pressed = [n for n, key_pin in enumerate(key_pins)
                     if not key_pin.value]
+
+    # Report battery voltage every 15 seconds and check for gc
+    if current_time - last_voltage_report_time > 15:
+        print('voltage:', to_volts(battery_pin.value))
+        last_voltage_report_time = current_time
+        
+        # gc now if nothing is happening
+        if not ( pressed
+                 or previously_pressed
+                 or pressed_toggle):
+            gc.collect()
+        
     if pressed != previously_pressed:
-        print('pressed:', pressed)
+        print('pressed:', pressed, counter, current_time)
         previously_pressed = pressed
         pressed_time = current_time
         pressed_toggle = True
-        poll_keys(pressed, keyboard)
+        activate_keys(pressed, keyboard)
 
     elif pressed_toggle \
             and (current_time - pressed_time)*1000 > HOLDTIME:
-        poll_keys(pressed, keyboard)
+        print('pressed toggle:', pressed, counter, current_time)
+        # pressed_toggle makes sure activate_keys gets called after 
+        # the defined hold time so keys that are layer changes when held
+        # get activated before any subsequent key presses that depend 
+        # on the layer change. 
+        activate_keys(pressed, keyboard)
         pressed_toggle = False
 
-    time.sleep(0.01)
+    time.sleep(1/POLL_FREQUENCY)

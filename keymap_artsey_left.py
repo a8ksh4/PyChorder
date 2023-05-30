@@ -81,9 +81,13 @@ CHORDS = {
     ('i', 'a'):             ',',
     ('a', 'o'):             '/',
     ('a', 'i', 'y'):        "'",
-    ('t', 'i'):             '!',
-    ('(', ')'):             ':',
-
+    ('t', 'i'):             '|',
+    ('r', 'y'):             ':',
+    ('r', 'i'):             ')',
+    ('t', 'y'):             '(',
+    ('r', 'i', 'y'):        '[',
+    ('t', 'y', 'i'):        ']',
+    # ('(', ')'):             ':',  # this is a little weird.
 
     ('o', 't', 'r', 'a'):   '_tab',         # Normal        *
     ('_pgdn','_home',
@@ -131,4 +135,20 @@ CHORDS = {
 }
 
 # Sort the keys for comparison later
-CHORDS = dict([(tuple(sorted(k)), v) for k, v in CHORDS.items()])
+tmp = []
+for k, v in CHORDS.items():
+    assert isinstance(k, tuple)
+    assert isinstance(v, (str, tuple))
+    if isinstance(v, tuple):
+        assert len(v) == 2
+        assert isinstance(v[0], str)
+        assert isinstance(v[1], int)
+
+    # convert v to format (v, layer/None)
+    if isinstance(v, str):
+        v = (v, None)
+
+    tmp.append((tuple(sorted(k)), v))
+
+CHORDS = dict(tmp)
+# CHORDS = dict([(tuple(sorted(k)), v) for k, v in CHORDS.items()])
