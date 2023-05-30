@@ -148,17 +148,3 @@ KEYMAP_TRANSLATE = {
     '_salta': (Keycode.LEFT_ALT, Keycode.LEFT_SHIFT, Keycode.TAB),
 }
 
-# OTHERS = ( uinput.REL_X,
-#            uinput.REL_Y,
-#            uinput.REL_WHEEL,)
-# UINPUT_ACTIVATE = set()
-# for val in UINPUT_TRANSLATE.values():
-#     if val == ():
-#         continue
-#     if isinstance(val[0], (list, tuple)):
-#         UINPUT_ACTIVATE.update(val)
-#     else:
-#         UINPUT_ACTIVATE.add(val)
-# UINPUT_ACTIVATE.update(OTHERS)
-
-# UINPUT_ACTIVATE = list(sorted(UINPUT_ACTIVATE))

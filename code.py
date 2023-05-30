@@ -13,9 +13,11 @@ from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS
 from adafruit_hid.keycode import Keycode
 
 POLL_FREQUENCY = 200.0
-HOLDTIME = 250
+HOLDTIME = 200
 # ONESHOT_TIMEOUT = 500
 BASE_LAYER = 0
+
+# Don't change these:
 TICKER = 0
 EVENTS = []
 PENDING_BUTTONS = set()
@@ -73,7 +75,15 @@ def get_output_key(buttons, layer, tap):
 
 
 def activate_keys(buttons_pressed, device):
-    '''preserves history of buttons already pressed.
+    '''This uses an event based system, tracked in the 'EVENTS' global.
+    The general flow is this:
+    * An event is generated if the conditions are met - either a pressed key
+      is released or the HOLDTIME is exceeded.
+    * Existing events are processed, including:
+      * events with status "released" have their keys released
+      * events marked for deletion are removed
+      * an event with status "new" looks up it's output key based on current
+        layer and pressed buttons, and the key is pressed.
     '''
     global TICKER  
     global BASE_LAYER
