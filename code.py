@@ -5,7 +5,7 @@ import gc
 import digitalio
 import analogio
 import usb_hid
-from keymap_artsey_left import BATTERY_PIN, PINS, LAYERS, CHORDS
+from keymap_leaf import BATTERY_PIN, PINS, LAYERS, CHORDS
 from keymap_translate import KEYMAP_TRANSLATE
 from keys import SHIFTED
 from adafruit_hid.keyboard import Keyboard
