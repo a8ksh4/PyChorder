@@ -1,5 +1,3 @@
-"""Artseyio layout for some board... I forget which.  Might have been paintbrush."""
-
 import board
 import keymap_helper
 
@@ -9,8 +7,15 @@ import keymap_helper
 #         19, 18, 17, 16)
 BATTERY_PIN = board.GP28
 
-PINS = [board.GP12, board.GP13, board.GP14, board.GP15,
-        board.GP19, board.GP18, board.GP17, board.GP16]
+# PINS = [board.GP0, board.GP1, board.GP2, board.GP3, board.GP4,
+#         board.GP5, board.GP6, board.GP7, board.GP8, board.GP9,
+#         board.GP10, board.GP11, board.GP12, board.GP13, board.GP14,
+#         board.GP15, board.GP16, board.GP17]
+PINS = [board.GP4, board.GP3, board.GP2, board.GP1, board.GP0,
+        board.GP9, board.GP8, board.GP7, board.GP6, board.GP5,
+        board.GP14, board.GP13, board.GP12, board.GP11, board.GP10,
+        board.GP17, board.GP16, board.GP15]
+
 
 ENCODER = ()
 
@@ -19,28 +24,40 @@ ENCODER = ()
 
 LAYERS = (
     # BASE
-    ((1, 's'), 't', 'r', (2, 'a'),
-     'o',      'i', 'y', (3, 'e')),
+    ((1, 's'),   't', 'r',    'a',      '-',
+     'o',        'i', 'y',    (3, 'e'), '_os_shft',
+     '_os_ctrl', '@', '_del', '+',      '_tab',
+     (2, ''), '_entr', ' '),
 
     # NUMBER
-    ('', '3', '2', '1',
-     '', '6', '5', '4',),
+    ('', '3', '2', '1', '',
+     '', '6', '5', '4', '',
+     '', '', '', '', '',
+     '', '', ''),
 
     # PARENS
-    ('}', '(', ')', '',
-     '{', '[', ']', '',),
+    ('`', '#', '{', '}', '^',
+     '\\', '$', '(', ')', '&',
+     '|', '%', '[', ']', '*',
+     '', '', ''),
 
     # SYMBOL
-    ('`', ';', '\\', '!',
-     '=', '-', '?',  '',),
+    ('`', ';', '\\', '!', '',
+     '=', '-', '?',  '', '',
+     '', '', '', '', '',
+     '', '', ''),
 
     # NAV
-    ('_pgup', '_home', '_up',   '_end',
-     '_pgdn', '_left', '_down', '_rght',),
+    ('_pgup', '_home', '_up',   '_end', '',
+     '_pgdn', '_left', '_down', '_rght', '',
+     '', '', '', '', '',
+     '', '', ''),
 
     # MOUSE
-    ('_scup', '_mbt2', '_mup',  '_mbt1',
-     '_scdn', '_mlft', '_mdwn', '_mrgt',)
+    ('_scup', '_mbt2', '_mup',  '_mbt1', '',
+     '_scdn', '_mlft', '_mdwn', '_mrgt', '',
+     '', '', '', '', '',
+     '', '', '')
 )
 
 CHORDS = {
@@ -107,7 +124,7 @@ CHORDS = {
     #('_home', '_rght'):     '_os_ctrl',     # Directional
     ('_mbt2', '_mrgt'):     '_os_ctrl',     # Mouse
 
-    ('s', 'i'):             '_alt',
+    # ('s', 'i'):             '_alt',
     ('s', 't', 'r', 'e'):   '_os_shft',
 
     ('r', 'e'):             '_bksp',        # Normal        *
@@ -139,3 +156,4 @@ CHORDS = {
 }
 
 CHORDS = keymap_helper.prepare_chords(CHORDS)
+

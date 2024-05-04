@@ -1,4 +1,7 @@
+'''Custom experimental keymap for the Leaf cyberdeck.'''
+
 import board
+import keymap_helper
 # PINS = (16, 21, 19, 25,
 #         20, 12, 26, 13)
 # PINS = (12, 13, 14, 15,
@@ -22,40 +25,34 @@ ENCODER = ()
 
 LAYERS = (
     # BASE
-    ((1, 's'), 't', 'r', (2, 'a'), '',
-     'o',      'i', 'y', (3, 'e'), '',
-     '', '', '', '', '',
-     '', '', ''),
+    ('s',     't',       'r',        'a',      '-',
+     'o',     'i',       'y',        'e',   '_os_shft',
+     '',       '', '_os_ctrl', '_os_shft',  '_entr',
+                (1, '_esc'), (2, ' '), (3, '_tab')),
 
     # NUMBER
-    ('', '3', '2', '1', '',
-     '', '6', '5', '4', '',
-     '', '', '', '', '',
-     '', '', ''),
+    ('[', '7', '8', '9', ']',
+     ';', '4', '5', '6', '=',
+     '`', '1', '2', '3', '\\',
+                '', '', ''),
 
-    # PARENS
-    ('}', '(', ')', '', '',
-     '{', '[', ']', '', '',
-     '', '', '', '', '',
-     '', '', ''),
-
-    # SYMBOL
-    ('`', ';', '\\', '!', '',
-     '=', '-', '?',  '', '',
-     '', '', '', '', '',
-     '', '', ''),
+    # SYM
+    ('{', '&', '*', '(', '}',
+     ':', '$', '%', '^', '+',
+     '~', '!', '@', '#', '|',
+                '', '', ''),
 
     # NAV
-    ('_pgup', '_home', '_up',   '_end', '',
-     '_pgdn', '_left', '_down', '_rght', '',
+    ('_pgup', '_home', '_up',   '_end', '_mup',
+     '_pgdn', '_left', '_down', '_rght', '_mdwn',
      '', '', '', '', '',
      '', '', ''),
 
-    # MOUSE
-    ('_scup', '_mbt2', '_mup',  '_mbt1', '',
-     '_scdn', '_mlft', '_mdwn', '_mrgt', '',
-     '', '', '', '', '',
-     '', '', '')
+    # # MOUSE
+    # ('_scup', '_mbt2', '_mup',  '_mbt1', '',
+    #  '_scdn', '_mlft', '_mdwn', '_mrgt', '',
+    #  '', '', '', '', '',
+    #  '', '', '')
 )
 
 CHORDS = {
@@ -87,13 +84,8 @@ CHORDS = {
     #                       'y',
     ('s', 't', 'r', 'a'):   'z',
     #
-    ('1', '2'):             '7',
-    ('2', '3'):             '8',
-    ('4', '5'):             '9',
-    ('5', '6'):             '0',
-    ('4', '2'):             '_bksp',
-    ('4', '1'):             '_entr',
-    ('_rght', '_end'):      '_entr',
+    ('2', '3'):             '0',
+
     #
     ('o', 'i', 'y', 'e'):   ' ',
     ('y', 'a'):             '.',
@@ -106,32 +98,39 @@ CHORDS = {
     ('t', 'y'):             '(',
     ('r', 'i', 'y'):        '[',
     ('t', 'y', 'i'):        ']',
+    # Symbol layer addons
+    ('(', '}'):             ')',
+    ('_esc', ' '):          3,
+    ('_tab', ' '):          '_shft',
+
     # ('(', ')'):             ':',  # this is a little weird.
 
     ('o', 't', 'r', 'a'):   '_tab',         # Normal        *
-    ('_pgdn','_home',
-        '_up', '_end',):    '_tab',         # Directional
-    ('_mlft', '_mbt2',
-        '_mup', '_mbt1'):   '_tab',         # Mouse
+    # ('_pgdn','_home',
+    #     '_up', '_end',):    '_tab',         # Directional
+    # ('_mlft', '_mbt2',
+    #     '_mup', '_mbt1'):   '_tab',         # Mouse
 
     ('a', 'e'):             '_entr',        # Normal        *
-    ('_end', '_rght'):      '_entr',        # Directional
-    ('_mbt1', '_mrht'):     '_entr',        # Mouse
+    # ('_end', '_rght'):      '_entr',        # Directional
+    # ('_mbt1', '_mrht'):     '_entr',        # Mouse
 
-    ('s', 'e'):             '_os_ctrl',     # Normal        *
-    #('_home', '_rght'):     '_os_ctrl',     # Directional
-    ('_mbt2', '_mrgt'):     '_os_ctrl',     # Mouse
+    # ('s', 'e'):             '_os_ctrl',     # Normal        *
+    # #('_home', '_rght'):     '_os_ctrl',     # Directional
+    # ('_mbt2', '_mrgt'):     '_os_ctrl',     # Mouse
 
-    # ('s', 'i'):             '_alt',
-    ('s', 't', 'r', 'e'):   '_os_shft',
+    # # ('s', 'i'):             '_alt',
+    # ('s', 't', 'r', 'e'):   '_os_shft',
 
     ('r', 'e'):             '_bksp',        # Normal        *
-    ('_up', '_rght'):       '_bksp',        # Directional
+    ('8', '6'):             '_bksp',        # Number
+    ('*', '^'):             '_bksp',        # Symbol
+    # ('_up', '_rght'):       '_bksp',        # Directional
     # ('_mup', '_mrgt'):      '_bksp',        # Mouse
 
-    ('o', 'r', 'a'):        '_esc',         # Normal        *
-    ('_pgdn', '_up', '_end'): '_esc',       # Directional
-    ('_mlft', '_mup', '_mbt1'): '_esc',     # Mouse
+    # ('o', 'r', 'a'):        '_esc',         # Normal        *
+    # ('_pgdn', '_up', '_end'): '_esc',       # Directional
+    # ('_mlft', '_mup', '_mbt1'): '_esc',     # Mouse
 
     # ('a', 'r', 'e', 'y'):   '_f11',         # Normal        *
     # ('_down', '_rght', '_up', '_end'): '_f11',  # Directional
@@ -141,33 +140,16 @@ CHORDS = {
     # ('t', 's', 'i', 'o'):   '_salta', #set('_shft', '_alt', '_tab'),
 
     # Nav Layer:
-    ('e', 'r', 'i'):            ('_set_base', 4),
-    ('_left', '_up', '_rght'):  ('_set_base', 0),
+    # ('e', 'r', 'i'):            ('_set_base', 4),
+    # ('_left', '_up', '_rght'):  ('_set_base', 0),
 
     # Mouse Layer:
-    ('a', 't', 'y'):            ('_set_base', 5),
-    ('_mbt1', '_mdwn', '_mbt2'): ('_set_base', 0),
+    # ('a', 't', 'y'):            ('_set_base', 5),
+    # ('_mbt1', '_mdwn', '_mbt2'): ('_set_base', 0),
     ('_mup', '_mrgt'):      '_mdur', # Mouse diagonal up right
     ('_mup', '_mlft'):      '_mdul', # Mouse diagonal up left
     ('_mdwn', '_mrgt'):     '_mddr', # Mouse diagonal down right
     ('_mdwn', '_mlft'):     '_mddl', # Mouse diagonal down left
 }
 
-# Sort the keys for comparison later
-tmp = []
-for k, v in CHORDS.items():
-    assert isinstance(k, tuple)
-    assert isinstance(v, (str, tuple))
-    if isinstance(v, tuple):
-        assert len(v) == 2
-        assert isinstance(v[0], str)
-        assert isinstance(v[1], int)
-
-    # convert v to format (v, layer/None)
-    if isinstance(v, str):
-        v = (v, None)
-
-    tmp.append((tuple(sorted(k)), v))
-
-CHORDS = dict(tmp)
-# CHORDS = dict([(tuple(sorted(k)), v) for k, v in CHORDS.items()])
+CHORDS = keymap_helper.prepare_chords(CHORDS)

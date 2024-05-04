@@ -1,4 +1,7 @@
+"""Keyboard layout for artseio using top left 4x2 keys."""
+
 import board
+import keymap_helper
 # PINS = (16, 21, 19, 25,
 #         20, 12, 26, 13)
 # PINS = (12, 13, 14, 15,
@@ -153,21 +156,4 @@ CHORDS = {
     ('_mdwn', '_mlft'):     '_mddl', # Mouse diagonal down left
 }
 
-# Sort the keys for comparison later
-tmp = []
-for k, v in CHORDS.items():
-    assert isinstance(k, tuple)
-    assert isinstance(v, (str, tuple))
-    if isinstance(v, tuple):
-        assert len(v) == 2
-        assert isinstance(v[0], str)
-        assert isinstance(v[1], int)
-
-    # convert v to format (v, layer/None)
-    if isinstance(v, str):
-        v = (v, None)
-
-    tmp.append((tuple(sorted(k)), v))
-
-CHORDS = dict(tmp)
-# CHORDS = dict([(tuple(sorted(k)), v) for k, v in CHORDS.items()])
+CHORDS = keymap_helper.prepare_chords(CHORDS)

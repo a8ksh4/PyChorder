@@ -43,23 +43,23 @@ def get_output_key(buttons, layer, tap):
     what output key should be sent.  If a new layer should be set.'''
 
     #print('buttons:', buttons, 'layer:', layer, 'tap:', tap)
-    
+
     # mapped_buttons are the keys on the current layer corresponding
     # to the pressed buttons.
     mapped_buttons = [LAYERS[layer][b] for b in buttons]
-    
+
     # If it was a tap, we ignore any hold-for-layer keys and get the tap behavior.
     if len(mapped_buttons) > 1 or tap:
         # convert any hold-tap layer keys to just the (tap) key
-        mapped_buttons = [b if isinstance(b, str) else b[1] 
+        mapped_buttons = [b if isinstance(b, str) else b[1]
                             for b in mapped_buttons]
         mapped_buttons = tuple(sorted(mapped_buttons))
-        
+
         # Multuple buttons pressed, translate chord to output key
         if len(mapped_buttons) > 1:
             result = CHORDS.get(mapped_buttons, (None, None))
             assert isinstance(result, tuple)
-            
+
         else:
             # Not a chord
             result = mapped_buttons[0], None
@@ -257,7 +257,7 @@ counter = 0
 while True: 
     counter += 1
     current_time = time.monotonic()
-    
+
     # Check each pin
     pressed = [n for n, key_pin in enumerate(key_pins)
                     if not key_pin.value]
@@ -266,13 +266,13 @@ while True:
     if current_time - last_voltage_report_time > 15:
         print('voltage:', to_volts(battery_pin.value))
         last_voltage_report_time = current_time
-        
+
         # gc now if nothing is happening
         if not ( pressed
                  or previously_pressed
                  or pressed_toggle):
             gc.collect()
-        
+
     if pressed != previously_pressed:
         print('pressed:', pressed, counter, current_time)
         previously_pressed = pressed
@@ -283,10 +283,10 @@ while True:
     elif pressed_toggle \
             and (current_time - pressed_time)*1000 > HOLDTIME:
         print('pressed toggle:', pressed, counter, current_time)
-        # pressed_toggle makes sure activate_keys gets called after 
+        # pressed_toggle makes sure activate_keys gets called after
         # the defined hold time so keys that are layer changes when held
-        # get activated before any subsequent key presses that depend 
-        # on the layer change. 
+        # get activated before any subsequent key presses that depend
+        # on the layer change.
         activate_keys(pressed, keyboard)
         pressed_toggle = False
 
