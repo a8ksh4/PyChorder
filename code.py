@@ -1,18 +1,23 @@
+"""code.py is the main file that is run by CircuitPython. This is the complete
+chording keyboard firmware.  Update your keymap file in the import statements
+below to change to a new keymap."""
 
 import time
-import board
 import gc
 import digitalio
 import analogio
 import usb_hid
-from keymap_leaf import BATTERY_PIN, PINS, LAYERS, CHORDS
-from keymap_translate import KEYMAP_TRANSLATE
-from keys import SHIFTED
 from adafruit_hid.keyboard import Keyboard
 from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS
-from adafruit_hid.keycode import Keycode
 
-POLL_FREQUENCY = 200.0
+# edit this line to change to a different keymap file
+from keymap_leaf import BATTERY_PIN, PINS, LAYERS, CHORDS
+
+from keymap_translate import KEYMAP_TRANSLATE
+from keys import SHIFTED
+
+
+POLL_FREQUENCY = 200.0  # in Hz
 HOLDTIME = 200
 # ONESHOT_TIMEOUT = 500
 BASE_LAYER = 0
@@ -254,7 +259,7 @@ pressed_time = None
 pressed_toggle = False
 counter = 0
 
-while True: 
+while True:
     counter += 1
     current_time = time.monotonic()
 
@@ -264,7 +269,7 @@ while True:
 
     # Report battery voltage every 15 seconds and check for gc
     if current_time - last_voltage_report_time > 15:
-        print('voltage:', to_volts(battery_pin.value))
+        print('voltage:', to_volts(battery_pin.value), 'mem free:', gc.mem_free())
         last_voltage_report_time = current_time
 
         # gc now if nothing is happening
