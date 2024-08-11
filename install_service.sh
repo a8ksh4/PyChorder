@@ -1,4 +1,4 @@
 #!/bin/sh -x
 
-cp ./battery.service /etc/systemd/system
-systemctl enable battery.service
+cp ./keyboard.service /etc/systemd/system
+systemctl enable keyboard.service

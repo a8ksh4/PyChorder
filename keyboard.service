@@ -1,5 +1,5 @@
 [Unit]
-Description=battery_file
+Description=keyboard_helper_service
 DefaultDependencies=no
 
 [Service]
@@ -16,14 +16,14 @@ IOSchedulingPriority=3
 #Restart=on-failure
 Restart=always
 #RestartSec=5
-StandardOutput=file:/home/dan/git/PyChorder/battery.log
-StandardError=file:/home/dan/git/PyChorder/battery.log
+StandardOutput=file:/home/dan/git/PyChorder/service.log
+StandardError=file:/home/dan/git/PyChorder/service.log
 SyslogIdentifier=battery_file
 
 
 ### Change the paths below to match yours
 WorkingDirectory=/home/dan/git/PyChorder
-ExecStart=/home/dan/git/PyChorder/battery_service.py
+ExecStart=/home/dan/git/PyChorder/keyboard_service.py
 ###
 
 [Install]

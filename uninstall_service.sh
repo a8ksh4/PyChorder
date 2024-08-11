@@ -1,4 +1,4 @@
 #!/bin/sh
 
-systemctl disable battery.service
-rm /etc/systemd/system/battery.service
+systemctl disable keyboard.service
+rm /etc/systemd/system/keyboard.service

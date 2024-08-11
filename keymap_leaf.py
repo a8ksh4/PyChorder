@@ -17,7 +17,8 @@ PINS = [board.GP4, board.GP3, board.GP2, board.GP1, board.GP0,
         board.GP14, board.GP13, board.GP12, board.GP11, board.GP10,
         board.GP17, board.GP16, board.GP15]
 
-
+# uses the 
+SHUTDOWN_COMBO = (0, 1, 2, 3, 5, 6, 7, 8)
 ENCODER = ()
 
     # B0,  B1,  B2,  B3,  B4,  B5,  Eu,
@@ -103,7 +104,8 @@ CHORDS = {
     ('_esc', ' '):          3,
     ('_tab', ' '):          '_shft',
 
-    # ('(', ')'):             ':',  # this is a little weird.
+    # shutdown system syscall
+    ('a', 'r', 't', 's', 'e', 'y', 'i', 'o'): '_sys_shdn',
 
     ('o', 't', 'r', 'a'):   '_tab',         # Normal        *
     # ('_pgdn','_home',

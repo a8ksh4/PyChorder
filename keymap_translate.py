@@ -1,3 +1,10 @@
+"""This file has the translations from human friendly keymap entries
+to the actual Keycode objects that the CircuitPython HID library uses.
+
+You can define custom keycodes here.  Particularly any key combinations
+you'd like to be accessible via sinble keypress can be added as several
+keys in a tuple.  See some examples at the bottom of the file."""
+
 from adafruit_hid.keycode import Keycode
 
 KEYMAP_TRANSLATE = {
@@ -144,7 +151,23 @@ KEYMAP_TRANSLATE = {
     '_f11': Keycode.F11,
     '_f12': Keycode.F12,
 
+    # Example key combinations
     '_alta': (Keycode.LEFT_ALT, Keycode.TAB),
     '_salta': (Keycode.LEFT_ALT, Keycode.LEFT_SHIFT, Keycode.TAB),
-}
 
+    # Example key sequences (nested tuples)
+    # ctrl+b and then n - tmux next window command.
+    '_cbn': ((Keycode.LEFT_CONTROL, Keycode.B), (Keycode.N)),
+    '_cbp': ((Keycode.LEFT_CONTROL, Keycode.B), (Keycode.P)),
+    '_cgc': ((Keycode.LEFT_CONTROL, Keycode.G), (Keycode.C)),
+    '_cb&': ((Keycode.LEFT_CONTROL, Keycode.B), (Keycode.SHIFT, Keycode.SEVEN)),
+    '_cb"': ((Keycode.LEFT_CONTROL, Keycode.B), (Keycode.QUOTE)),
+    '_cb%': ((Keycode.LEFT_CONTROL, Keycode.B), (Keycode.SHIFT, Keycode.FIVE)),
+    '_cb,': ((Keycode.LEFT_CONTROL, Keycode.B), (Keycode.COMMA)),
+
+    # Example system command. Give user to execute the command and
+    # the command in the dict.
+    '_sys_shdn': {'root': 'shutdown now'},
+    '_sys_touch': {'dan': 'touch /tmp/touched'},
+
+}

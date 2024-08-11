@@ -127,6 +127,7 @@ def activate_keys(buttons_pressed, device):
 
             tap =  clock - TICKER < HOLDTIME
 
+            # NEW EVENT!
             # print(f'{(len(PENDING_BUTTONS), len(buttons_pressed), clock, TICKER, clock-TICKER)}')
             output_key, new_layer = get_output_key(PENDING_BUTTONS, current_layer, tap)
             # print(f'output_key: {output_key}, new_layer: {new_layer}')
@@ -206,31 +207,43 @@ def activate_keys(buttons_pressed, device):
 
         uinput_codes = [KEYMAP_TRANSLATE[k] for k in effective_keys
                             if k and k is not None]
-        # print('effective_keys:', effective_keys)
-        # print('uinput_codes:', uinput_codes)
+        # TODO: we can unfold items here for sequences if needed.
+
         unpress_later = []
         for uinput_code in uinput_codes:
             # if isinstance(uinput_code[0], tuple):
             if isinstance(uinput_code, tuple):
+                # Key Combo
                 temp_codes = uinput_code[:-1]
                 keep = uinput_code[-1]
+
+            elif isinstance(uinput_code, dict):
+                # System Command to execute is printed to serial
+                temp_codes = []
+                keep = None
+                for account, command in uinput_code.items():
+                    print('SYS', account, command)
+                continue  # nothing else to do for a system command
+
             else:
+                # Basic key press
                 temp_codes = []
                 keep = uinput_code
+
             unpress_later.append(keep)
 
             for temp_code in temp_codes:
                 print('    device press', temp_code)
                 device.press(temp_code)
-                time.sleep(0.01)
+                time.sleep(0.001)
 
             print('    device press', keep)
             device.press(keep)
-            time.sleep(0.01)
+            time.sleep(0.001)
             for temp_code in temp_codes:
                 print('    device release', temp_code)
                 device.release(temp_code)
-                time.sleep(0.01)
+                time.sleep(0.001)
         last_event['uinput_codes'] = unpress_later
 
 
@@ -256,8 +269,9 @@ battery_pin = analogio.AnalogIn(BATTERY_PIN)
 last_voltage_report_time = 0
 previously_pressed = None
 pressed_time = None
-pressed_toggle = False
 counter = 0
+last_time = None
+pressed_toggle = False
 
 while True:
     counter += 1
@@ -269,7 +283,8 @@ while True:
 
     # Report battery voltage every 15 seconds and check for gc
     if current_time - last_voltage_report_time > 15:
-        print('voltage:', to_volts(battery_pin.value), 'mem free:', gc.mem_free())
+        print('voltage:', to_volts(battery_pin.value))
+        print('mem free:', gc.mem_free())
         last_voltage_report_time = current_time
 
         # gc now if nothing is happening
@@ -282,17 +297,23 @@ while True:
         print('pressed:', pressed, counter, current_time)
         previously_pressed = pressed
         pressed_time = current_time
-        pressed_toggle = True
+        last_time = current_time
         activate_keys(pressed, keyboard)
+        pressed_toggle = True
 
-    elif pressed_toggle \
-            and (current_time - pressed_time)*1000 > HOLDTIME:
-        print('pressed toggle:', pressed, counter, current_time)
+    elif EVENTS and current_time - last_time > 5:
         # pressed_toggle makes sure activate_keys gets called after
         # the defined hold time so keys that are layer changes when held
         # get activated before any subsequent key presses that depend
         # on the layer change.
+        pressed_time = current_time
         activate_keys(pressed, keyboard)
         pressed_toggle = False
 
-    time.sleep(1/POLL_FREQUENCY)
+    elif pressed_toggle and current_time - pressed_time > 0.1:
+        activate_keys(pressed, keyboard)
+        pressed_toggle = False
+
+    sleep_time = max((0, (1/POLL_FREQUENCY) - time.monotonic() - current_time))
+    time.sleep(sleep_time)
+    # time.sleep(1/POLL_FREQUENCY)

@@ -6,20 +6,21 @@ It support lots of features:
 * Chords - press 'a' and 'r' to type 'f'.
 * Momentary layer changes - hold a key to active a layer for a moment
 * Default layer changes - set the base layer
-* Oneshot Shift, Ctrl, Alt. It does NOT currently support holding these keys and typing multiple subsequent keys.
+* Oneshot Shift, Ctrl, Alt.
 * Arrow keys, home, end, pgup, pgdn navigation.
 * Reporting battery voltage on the serial device from an analog pin.
 * Generating key combinations as a single action.  E.g. '_alta' will generate an alt+tab key press.
 
 To be added shortly or if needed:
+* System command execution triggered from keypress (via the service)
+* one-shot layer changes.
 * Mouse cursor movement.
 * Mouse wheel
 * Encoder wheel
-* Shift, Ctrl, Alt without requiring one-shot behavior.  Right now, you can't hold shift, but you can tap the one-shot shift key or chord, and the next thing type will have shift applied to it. 
 * Adjusting audio levels, display brightness
 * Pin matrix scanning (currently it's one key per pin)
 * Keypress Sequences from a single key
-* Support settign the voltage pin to None if it isn't needed.
+* Support setting the voltage pin to None if it isn't needed.
 
 Known Issues
 * Alt wasn't working
@@ -59,8 +60,8 @@ Scroll down to the bottom and you can define keys like the following that will g
   * StandardOutput=file:/home/dan/git/PyChorder/battery.log
   * StandardError=file:/home/dan/git/PyChorder/battery.log
   * WorkingDirectory=/home/dan/git/PyChorder
-  * ExecStart=/home/dan/git/PyChorder/battery_service.py
-* Edit the output file and serial port in battery_service.py to reference the serial port that shows up on your system when you plug in the keyboard with circuitpython on it into your computer.
+  * ExecStart=/home/dan/git/PyChorder/keyboard_service.py
+* Edit the output file and serial port in keyboard_service.py to reference the serial port that shows up on your system when you plug in the keyboard with circuitpython on it into your computer.
   * BATTERY_FILE = '/home/dan/.battery'
   * SERIAL_PORT = '/dev/ttyACM0'
   
