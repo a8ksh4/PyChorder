@@ -16,9 +16,9 @@ from keymap_leaf import BATTERY_PIN, PINS, LAYERS, CHORDS
 from keymap_translate import KEYMAP_TRANSLATE
 from keys import SHIFTED
 
-
+BATTERY_REPORT_INTERVAL = 15000  # in ms
 POLL_FREQUENCY = 200.0  # in Hz
-HOLDTIME = 200
+HOLDTIME = 200  # in ms
 # ONESHOT_TIMEOUT = 500
 BASE_LAYER = 0
 
@@ -275,14 +275,14 @@ pressed_toggle = False
 
 while True:
     counter += 1
-    current_time = time.monotonic()
+    current_time = time_ms()
 
     # Check each pin
     pressed = [n for n, key_pin in enumerate(key_pins)
                     if not key_pin.value]
 
     # Report battery voltage every 15 seconds and check for gc
-    if current_time - last_voltage_report_time > 15:
+    if current_time - last_voltage_report_time > BATTERY_REPORT_INTERVAL:
         print('voltage:', to_volts(battery_pin.value))
         print('mem free:', gc.mem_free())
         last_voltage_report_time = current_time
@@ -314,6 +314,6 @@ while True:
         activate_keys(pressed, keyboard)
         pressed_toggle = False
 
-    sleep_time = max((0, (1/POLL_FREQUENCY) - time.monotonic() - current_time))
+    sleep_time = max((0, (1000/POLL_FREQUENCY) - time_ms() - current_time))
     time.sleep(sleep_time)
     # time.sleep(1/POLL_FREQUENCY)
