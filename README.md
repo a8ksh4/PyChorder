@@ -10,6 +10,7 @@ It support lots of features:
 * Arrow keys, home, end, pgup, pgdn navigation.
 * Reporting battery voltage on the serial device from an analog pin.
 * Generating key combinations as a single action.  E.g. '_alta' will generate an alt+tab key press.
+* Game mode for a specific layer with chording disabled to reduce keypress latency.
 
 To be added shortly or if needed:
 * System command execution triggered from keypress (via the service)
@@ -23,8 +24,7 @@ To be added shortly or if needed:
 * Support setting the voltage pin to None if it isn't needed.
 
 Known Issues
-* Alt wasn't working
-* Two characters typed when I just tap a key. I had to increase the polling frequency to fix this (currently set at 200 times per second) and might need to rework the hold timing if it causes problems.
+* Alt wasn't working?
 
 ## Changing the Keymap
 When you create a new keymap file, update the import statement at the top of code.py to reference it:
@@ -35,7 +35,7 @@ The keymap file is written in python (and looks a lot like json probably).
 * CHORDS lists the combinations of keys that produce other effects.
 
 ### Supported Keys and Special Keys/Effects
-* Most keys are given as thir character in quotes.  E.g. 'a' will type an 'a'.
+* Most keys are given as thenir character in quotes.  E.g. 'a' will type an 'a'.
   * 'a' - 'z'
   * 'A' - 'Z'
   * '0' - '9'
@@ -55,6 +55,10 @@ Scroll down to the bottom and you can define keys like the following that will g
 * '_alta': (Keycode.LEFT_ALT, Keycode.TAB),
 * '_salta': (Keycode.LEFT_ALT, Keycode.LEFT_SHIFT, Keycode.TAB),
 
+And at the bottom you can map aliases  to commands to be exesuted by the service on keypres.  Give the account and command as key value pair.  For example:
+* '_sys_shdn': {'root': 'shutdown now'},
+* '_sys_touch': {'dan': 'touch /tmp/touched'},
+
 ## Configuring the service for battery reporting
 * Edit the battery.service with the paths appropriate for your system:
   * StandardOutput=file:/home/dan/git/PyChorder/battery.log
@@ -68,3 +72,12 @@ Scroll down to the bottom and you can define keys like the following that will g
 ## Globals in the code.py
 You may want to adjust HOLD_TIME to adjust how much time it takes for a combinatino of keys being pressed to be tested as a chord.  Longer means you have a little more time to plop down your fingers to generate a chord.  Other implications:
 * ...
+* BATTERY_REPORT_INTERVAL = 15000  # in ms
+  * Battery voltage report is via serial device, e.g. /dev/ttyACM0
+* POLL_FREQUENCY = 200.0  # in Hz
+* HOLDTIME = 200  # in ms
+  * How long you have to press all keys to form a chord.
+* ONESHOT_TIMEOUT = 500
+  * Not implemented
+* BASE_LAYER = 0
+  * The default base layer.  This will be updated by _set_base key bindings.
