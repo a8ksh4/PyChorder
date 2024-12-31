@@ -1,4 +1,4 @@
 #!/bin/sh
 
-cp *.py /home/dan/pico/
+cp *.py /home/$USER/pico/
 sync
