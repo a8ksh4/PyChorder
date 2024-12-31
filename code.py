@@ -2,13 +2,14 @@
 chording keyboard firmware.  Update your keymap file in the import statements
 below to change to a new keymap."""
 
+# type: ignore
 import time
 import gc
 import digitalio
 import analogio
 import usb_hid
 from adafruit_hid.keyboard import Keyboard
-from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS
+# from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS
 
 # edit this line to change to a different keymap file
 from keymap_leaf import BATTERY_PIN, PINS, LAYERS, CHORDS
@@ -252,68 +253,75 @@ def activate_keys(buttons_pressed, device):
 ##############################################################################
 time.sleep(1)  # Sleep for a bit to avoid a race condition on some systems
 
-keyboard = Keyboard(usb_hid.devices)
-keyboard_layout = KeyboardLayoutUS(keyboard)
+def main():
+    '''Main loop for stuff'''
+    keyboard = Keyboard(usb_hid.devices)
+    # keyboard_layout = KeyboardLayoutUS(keyboard)
 
-# Initialize the key pins and analog battery pin
-key_pins = []
-for pin in PINS:
-    key_pin = digitalio.DigitalInOut(pin)
-    key_pin.direction = digitalio.Direction.INPUT
-    key_pin.pull = digitalio.Pull.UP
-    key_pins.append(key_pin)
+    # Initialize the key pins and analog battery pin
+    key_pins = []
+    for pin in PINS:
+        key_pin = digitalio.DigitalInOut(pin)
+        key_pin.direction = digitalio.Direction.INPUT
+        key_pin.pull = digitalio.Pull.UP
+        key_pins.append(key_pin)
 
-battery_pin = analogio.AnalogIn(BATTERY_PIN)
+    battery_pin = analogio.AnalogIn(BATTERY_PIN)
 
-# Event tracking variables for in loop
-last_voltage_report_time = 0
-previously_pressed = None
-pressed_time = None
-counter = 0
-last_time = None
-pressed_toggle = False
+    # Event tracking variables for in loop
+    last_voltage_report_time = 0
+    previously_pressed = None
+    pressed_time = None
+    counter = 0
+    last_time = None
+    pressed_toggle = False
 
-while True:
-    counter += 1
-    current_time = time_ms()
+    print('Starting main loop')
+    while True:
+        counter += 1
+        current_time = time_ms()
 
-    # Check each pin
-    pressed = [n for n, key_pin in enumerate(key_pins)
-                    if not key_pin.value]
+        # Check each pin
+        pressed = [n for n, key_pin in enumerate(key_pins)
+                        if not key_pin.value]
 
-    # Report battery voltage every 15 seconds and check for gc
-    if current_time - last_voltage_report_time > BATTERY_REPORT_INTERVAL:
-        print('voltage:', to_volts(battery_pin.value))
-        print('mem free:', gc.mem_free())
-        last_voltage_report_time = current_time
+        # Report battery voltage every 15 seconds and check for gc
+        if current_time - last_voltage_report_time > BATTERY_REPORT_INTERVAL:
+            print('voltage:', to_volts(battery_pin.value))
+            print('mem free:', gc.mem_free())
+            last_voltage_report_time = current_time
 
-        # gc now if nothing is happening
-        if not ( pressed
-                 or previously_pressed
-                 or pressed_toggle):
-            gc.collect()
+            # gc now if nothing is happening
+            if not ( pressed
+                    or previously_pressed
+                    or pressed_toggle):
+                gc.collect()
 
-    if pressed != previously_pressed:
-        print('pressed:', pressed, counter, current_time)
-        previously_pressed = pressed
-        pressed_time = current_time
-        last_time = current_time
-        activate_keys(pressed, keyboard)
-        pressed_toggle = True
+        if pressed != previously_pressed:
+            print('pressed:', pressed, counter, current_time)
+            previously_pressed = pressed
+            pressed_time = current_time
+            last_time = current_time
+            activate_keys(pressed, keyboard)
+            pressed_toggle = True
 
-    elif EVENTS and current_time - last_time > 5:
-        # pressed_toggle makes sure activate_keys gets called after
-        # the defined hold time so keys that are layer changes when held
-        # get activated before any subsequent key presses that depend
-        # on the layer change.
-        pressed_time = current_time
-        activate_keys(pressed, keyboard)
-        pressed_toggle = False
+        elif EVENTS and current_time - last_time > 5:
+            # pressed_toggle makes sure activate_keys gets called after
+            # the defined hold time so keys that are layer changes when held
+            # get activated before any subsequent key presses that depend
+            # on the layer change.
+            pressed_time = current_time
+            activate_keys(pressed, keyboard)
+            # pressed_toggle = False
 
-    elif pressed_toggle and current_time - pressed_time > 0.1:
-        activate_keys(pressed, keyboard)
-        pressed_toggle = False
+        # elif pressed_toggle and (current_time - pressed_time) > HOLDTIME:
+        #     activate_keys(pressed, keyboard)
+        #     pressed_toggle = False
+        elif pressed:
+            activate_keys(pressed, keyboard)
 
-    sleep_time = max((0, (1000/POLL_FREQUENCY) - time_ms() - current_time))
-    time.sleep(sleep_time)
-    # time.sleep(1/POLL_FREQUENCY)
+        sleep_time = max((0, (1000/POLL_FREQUENCY) - time_ms() - current_time))
+        time.sleep(sleep_time)
+        # time.sleep(1/POLL_FREQUENCY)
+
+main()
