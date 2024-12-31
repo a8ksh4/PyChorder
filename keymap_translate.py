@@ -1,6 +1,5 @@
 """This file has the translations from human friendly keymap entries
 to the actual Keycode objects that the CircuitPython HID library uses.
-
 You can define custom keycodes here.  Particularly any key combinations
 you'd like to be accessible via sinble keypress can be added as several
 keys in a tuple.  See some examples at the bottom of the file."""
@@ -116,6 +115,9 @@ KEYMAP_TRANSLATE = {
     '_tab': Keycode.TAB,
     '_shft': Keycode.SHIFT,
     '_ctrl': Keycode.CONTROL,
+    '_alt': Keycode.ALT,
+    '_lalt': Keycode.ALT,
+    '_ralt': Keycode.RIGHT_ALT,
     '_gui': Keycode.WINDOWS,
     '_rctrl': Keycode.RIGHT_CONTROL,
     '_pgup': Keycode.PAGE_UP,

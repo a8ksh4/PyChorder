@@ -25,7 +25,7 @@ LAYERS = (
     # BASE - 0
     ('s',     't',       'r',        'a',      '-',
      'o',     'i',       'y',        'e',   '_os_shft',
-     '',       '', '_os_ctrl', '_os_shft',  '_entr',
+     '',       '_os_alt', '_os_ctrl', '_os_shft',  '_entr',
                 (1, '_esc'), (2, ' '), (3, '_tab')),
 
     # NUMBER - 1

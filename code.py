@@ -27,9 +27,7 @@ BASE_LAYER = 0
 TICKER = 0
 EVENTS = []
 PENDING_BUTTONS = set()
-OS_SHIFT_PENDING = False
-OS_CTRL_PENDING = False
-OS_ALT_PENDING = False
+OS_PENDING = {'_shift': False, '_alt': False, '_ctrl': False}
 LK_SHIFT_ACTIVE = False
 TIMER = None
 DEBUG = False
@@ -76,8 +74,10 @@ def get_output_key(buttons, layer, tap):
         else:
             result = None, mapped_buttons[0][0]
 
+    # Handle base layer shift keys...
     if isinstance(result[0], str) and result[0].startswith('_set_base_'):
         result = '_set_base', int(result[0][-1])
+
     #print(f'get output key: {buttons}, {layer}, {tap}, {result}')
     return result
 
@@ -96,9 +96,7 @@ def activate_keys(buttons_pressed, device):
     global TICKER  
     global BASE_LAYER
     global EVENTS
-    global OS_SHIFT_PENDING
-    global OS_CTRL_PENDING
-    global OS_ALT_PENDING
+    # global OS_PENDING
 
     clock = time_ms()
 
@@ -140,30 +138,25 @@ def activate_keys(buttons_pressed, device):
                 BASE_LAYER = new_layer
                 output_key, new_layer = None, None
 
-            if output_key == '_os_shft':
-                OS_SHIFT_PENDING = True
+            # Set onshot key for next event
+            if isinstance(output_key, str) and output_key.startswith('_os_'):
+                os_key = output_key[3:]
+                OS_PENDING[os_key] = True
+                print('OS', os_key, OS_PENDING)
                 output_key = None
 
-            if output_key == '_os_ctrl':
-                OS_CTRL_PENDING = True
-                output_key = None
-
-            if output_key == '_os_alt':
-                OS_ALT_PENDING = True
-                output_key = None
-
-            if output_key is not None and OS_SHIFT_PENDING:
+            # Execute onshot shift
+            if output_key is not None and OS_PENDING['_shift']:
                 if output_key in SHIFTED:
                     output_key = SHIFTED[output_key]
-                OS_SHIFT_PENDING = False
+                OS_PENDING['_shift'] = False
 
-            if output_key is not None and OS_CTRL_PENDING:
-                output_key = ('_ctrl', output_key)
-                OS_CTRL_PENDING = False
-
-            if output_key is not None and OS_ALT_PENDING:
-                output_key = ('_alt', output_key)
-                OS_ALT_PENDING = False
+            # Execute any other oneshot key
+            if output_key is not None and any(OS_PENDING.values()):
+                os_key = [k for k, v in OS_PENDING.items() if v][0]
+                output_key = (os_key, output_key)
+                print('OSA', output_key)
+                OS_PENDING[os_key] = False
 
             # align on tuple output_key
             if not isinstance(output_key, tuple):
