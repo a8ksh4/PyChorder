@@ -18,7 +18,7 @@ from keymap_translate import KEYMAP_TRANSLATE
 from keys import SHIFTED
 
 BATTERY_REPORT_INTERVAL = 15000  # in ms
-POLL_FREQUENCY = 200.0  # in Hz
+POLL_FREQUENCY = 100.0  # in Hz
 HOLDTIME = 200  # in ms
 # ONESHOT_TIMEOUT = 500
 BASE_LAYER = 0
@@ -273,6 +273,7 @@ def main():
     pressed_toggle = False
 
     print('Starting main loop')
+    iter_count, max_sleep_time, max_iter_time, iter_time_sum, sleep_time_sum = 1, 0, 0, 0, 0
     while True:
         counter += 1
         current_time = time_ms()
@@ -282,15 +283,19 @@ def main():
                         if not key_pin.value]
 
         # Report battery voltage every 15 seconds and check for gc
-        if current_time - last_voltage_report_time > BATTERY_REPORT_INTERVAL:
+        if (current_time - last_voltage_report_time) > BATTERY_REPORT_INTERVAL:
             print('voltage:', to_volts(battery_pin.value))
             print('mem free:', gc.mem_free())
+            print('iter sum', iter_time_sum, 'max', max_iter_time, 'avg', iter_time_sum/iter_count)
+            print('sleep sum', sleep_time_sum, 'max', max_sleep_time, 'avg', sleep_time_sum/iter_count)
+            print('total seconds this cycle', (sleep_time_sum + iter_time_sum)/1000)
+            iter_count, max_sleep_time, max_iter_time, iter_time_sum, sleep_time_sum = 0, 0, 0, 0, 0
             last_voltage_report_time = current_time
 
             # gc now if nothing is happening
             if not ( pressed
                     or previously_pressed
-                    or pressed_toggle):
+                    or pressed_toggle ):
                 gc.collect()
 
         if pressed != previously_pressed:
@@ -315,9 +320,15 @@ def main():
         #     pressed_toggle = False
         elif pressed:
             activate_keys(pressed, keyboard)
+        iter_time = time_ms() - current_time
+        sleep_time = max((0, (1000/POLL_FREQUENCY) - iter_time))
 
-        sleep_time = max((0, (1000/POLL_FREQUENCY) - time_ms() - current_time))
-        time.sleep(sleep_time)
+        iter_count += 1
+        iter_time_sum += iter_time
+        sleep_time_sum += sleep_time
+        max_iter_time = max((max_iter_time, iter_time))
+        max_sleep_time = max((max_sleep_time, sleep_time))
+        time.sleep(sleep_time/1000)
         # time.sleep(1/POLL_FREQUENCY)
 
 main()
