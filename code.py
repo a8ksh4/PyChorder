@@ -12,7 +12,7 @@ from adafruit_hid.keyboard import Keyboard
 # from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS
 
 # edit this line to change to a different keymap file
-from keymap_leaf import BATTERY_PIN, PINS, LAYERS, CHORDS
+from keymap_leaf import BATTERY_PIN, PINS, LAYERS, CHORDS, GAME_MODE_LAYER
 
 from keymap_translate import KEYMAP_TRANSLATE
 from keys import SHIFTED
@@ -76,6 +76,8 @@ def get_output_key(buttons, layer, tap):
         else:
             result = None, mapped_buttons[0][0]
 
+    if isinstance(result[0], str) and result[0].startswith('_set_base_'):
+        result = '_set_base', int(result[0][-1])
     #print(f'get output key: {buttons}, {layer}, {tap}, {result}')
     return result
 
@@ -124,14 +126,15 @@ def activate_keys(buttons_pressed, device):
 
         # DO WE MEET THE CONDITIONS TO START A NEW EVENT?
         if ( len(PENDING_BUTTONS) > len(buttons_pressed)  # one or more keys released
-                or clock - TICKER > HOLDTIME ):           # hold time exceeded
+                or (clock - TICKER) > HOLDTIME          # hold time exceeded
+                or BASE_LAYER == GAME_MODE_LAYER):      # game mode active
 
-            tap =  clock - TICKER < HOLDTIME
+            tap =  (clock - TICKER) < HOLDTIME
 
             # NEW EVENT!
             # print(f'{(len(PENDING_BUTTONS), len(buttons_pressed), clock, TICKER, clock-TICKER)}')
             output_key, new_layer = get_output_key(PENDING_BUTTONS, current_layer, tap)
-            # print(f'output_key: {output_key}, new_layer: {new_layer}')
+            print(f'output_key: {output_key}, new_layer: {new_layer}')
 
             if output_key == '_set_base':
                 BASE_LAYER = new_layer
@@ -271,7 +274,7 @@ def main():
     # Event tracking variables for in loop
     last_voltage_report_time = 0
     previously_pressed = None
-    pressed_time = None
+    # pressed_time = None
     counter = 0
     last_time = None
     pressed_toggle = False
@@ -300,7 +303,7 @@ def main():
         if pressed != previously_pressed:
             print('pressed:', pressed, counter, current_time)
             previously_pressed = pressed
-            pressed_time = current_time
+            # pressed_time = current_time
             last_time = current_time
             activate_keys(pressed, keyboard)
             pressed_toggle = True
@@ -310,7 +313,7 @@ def main():
             # the defined hold time so keys that are layer changes when held
             # get activated before any subsequent key presses that depend
             # on the layer change.
-            pressed_time = current_time
+            # pressed_time = current_time
             activate_keys(pressed, keyboard)
             # pressed_toggle = False
 

@@ -20,36 +20,43 @@ ENCODER = ()
     # B0,  B1,  B2,  B3,  B4,  B5,  Eu,
     # B7,  B8,  B9,  B10, B11, B12, Ed, Eb
 
+GAME_MODE_LAYER = 5
 LAYERS = (
-    # BASE
+    # BASE - 0
     ('s',     't',       'r',        'a',      '-',
      'o',     'i',       'y',        'e',   '_os_shft',
      '',       '', '_os_ctrl', '_os_shft',  '_entr',
                 (1, '_esc'), (2, ' '), (3, '_tab')),
 
-    # NUMBER
+    # NUMBER - 1
     ('[', '7', '8', '9', ']',
      ';', '4', '5', '6', '=',
      '`', '1', '2', '3', '\\',
                 '', '', ''),
 
-    # SYM
+    # SYM - 2
     ('{', '&', '*', '(', '}',
      ':', '$', '%', '^', '+',
      '~', '!', '@', '#', '|',
                 '', '', ''),
 
-    # NAV
+    # NAV - 3
     ('_pgup', '_home', '_up',   '_end', '_mup',
      '_pgdn', '_left', '_down', '_rght', '_mdwn',
      '', '', '', '', '',
      '', '', ''),
 
-    # # MOUSE
-    # ('_scup', '_mbt2', '_mup',  '_mbt1', '',
-    #  '_scdn', '_mlft', '_mdwn', '_mrgt', '',
-    #  '', '', '', '', '',
-    #  '', '', '')
+    # MOUSE - 4
+    ('_scup', '_mbt2', '_mup',  '_mbt1', '',
+     '_scdn', '_mlft', '_mdwn', '_mrgt', '',
+     '', '', '', '', '',
+     '', '', ''),
+
+    # GAME - 5
+    ('_set_base_0', '', '_up', '', 'c',
+     '', '_left', '_down', '_rght', 'x',
+     '1', '2', '3', '4', 'z',
+     '_esc', '_entr', '_tab'),
 )
 
 CHORDS = {
@@ -95,6 +102,11 @@ CHORDS = {
     ('t', 'y'):             '(',
     ('r', 'i', 'y'):        '[',
     ('t', 'y', 'i'):        ']',
+
+    # Base layer toggle from BASE to GAME
+    ('s', 't', 'r', 'a', '-'):   ('_set_base', 5),
+    # ('_esc', '_entr', '_tab'):  ('_set_base', 0),
+
     # Symbol layer addons
     ('(', '}'):             ')',
     ('_esc', ' '):          3,
