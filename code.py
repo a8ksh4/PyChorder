@@ -2,6 +2,7 @@
 chording keyboard firmware.  Update your keymap file in the import statements
 below to change to a new keymap."""
 
+print('hello 1')
 # type: ignore
 import time
 import gc
@@ -12,7 +13,8 @@ from adafruit_hid.keyboard import Keyboard
 # from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS
 
 # edit this line to change to a different keymap file
-from keymap_leaf import BATTERY_PIN, PINS, LAYERS, CHORDS, GAME_MODE_LAYER
+#from keymap_leaf import BATTERY_PIN, PINS, LAYERS, CHORDS, GAME_MODE_LAYER
+from keymap_crkbd_rt import BATTERY_PIN, ROWS, COLS, PINS, REVERSE_DIODES, LAYERS, CHORDS, GAME_MODE_LAYER
 
 from keymap_translate import KEYMAP_TRANSLATE
 from keys import SHIFTED
@@ -244,6 +246,17 @@ def activate_keys(buttons_pressed, device):
         last_event['uinput_codes'] = unpress_later
 
 
+def read_pin(pin):
+    '''Read a pin, return True if it's pressed.  This provides compatiblilty for 
+    pin-per-key mode and matrix mode where we need to pull the row low to check the col.'''
+    if isinstance(pin, tuple):
+        in_pin, out_pin = pin
+        out_pin.value = False
+        pressed = not in_pin.value
+        out_pin.value = True
+        return pressed
+    return not pin.value
+
 ##############################################################################
 # Main loop
 ##############################################################################
@@ -255,14 +268,62 @@ def main():
     # keyboard_layout = KeyboardLayoutUS(keyboard)
 
     # Initialize the key pins and analog battery pin
+    if ROWS is not None:
+        rows = [digitalio.DigitalInOut(row) for row in ROWS]
+        if REVERSE_DIODES:
+            for row in rows:
+                row.direction = digitalio.Direction.OUTPUT
+                row.value = True
+        else:
+            for row in rows:
+                row.direction = digitalio.Direction.INPUT
+                row.pull = digitalio.Pull.UP
+    if COLS is not None:
+        cols = [digitalio.DigitalInOut(col) for col in COLS]
+        if REVERSE_DIODES:
+            for col in cols:
+                col.direction = digitalio.Direction.INPUT
+                col.pull = digitalio.Pull.UP
+        else:
+            for col in cols:
+                col.direction = digitalio.Direction.OUTPUT
+                col.value = True
+
+    print(list(enumerate(PINS)))
     key_pins = []
     for pin in PINS:
-        key_pin = digitalio.DigitalInOut(pin)
-        key_pin.direction = digitalio.Direction.INPUT
-        key_pin.pull = digitalio.Pull.UP
-        key_pins.append(key_pin)
+        if isinstance(pin, tuple):
+            row, col = pin
+            row_num = ROWS.index(row)
+            row = rows[row_num]
+            col_num = COLS.index(col)
+            col = cols[col_num]
+            if REVERSE_DIODES:
+                key_pins.append((col, row))
+            else:
+                key_pins.append((row, col))
 
-    battery_pin = analogio.AnalogIn(BATTERY_PIN)
+            # if REVERSE_DIODES:
+            #     col, row = pin
+            # else:
+            #     row, col = pin
+            # key_row = digitalio.DigitalInOut(row)
+            # key_row.direction = digitalio.Direction.OUTPUT
+            # key_row.value = False
+            # key_col = digitalio.DigitalInOut(col)
+            # key_col.direction = digitalio.Direction.INPUT
+            # key_col.pull = digitalio.Pull.UP
+            # key_pins.append((key_row, key_col))
+        else:
+            key_pin = digitalio.DigitalInOut(pin)
+            key_pin.direction = digitalio.Direction.INPUT
+            key_pin.pull = digitalio.Pull.UP
+            key_pins.append(key_pin)
+
+    if BATTERY_PIN is not None:
+        battery_pin = analogio.AnalogIn(BATTERY_PIN)
+    else:
+        battery_pin = None
 
     # Event tracking variables for in loop
     last_voltage_report_time = 0
@@ -280,15 +341,15 @@ def main():
 
         # Check each pin
         pressed = [n for n, key_pin in enumerate(key_pins)
-                        if not key_pin.value]
+                        if read_pin(key_pin)]
 
         # Report battery voltage every 15 seconds and check for gc
         if (current_time - last_voltage_report_time) > BATTERY_REPORT_INTERVAL:
-            print('voltage:', to_volts(battery_pin.value))
-            print('mem free:', gc.mem_free())
-            print('iter sum', iter_time_sum, 'max', max_iter_time, 'avg', iter_time_sum/iter_count)
-            print('sleep sum', sleep_time_sum, 'max', max_sleep_time, 'avg', sleep_time_sum/iter_count)
-            print('total seconds this cycle', (sleep_time_sum + iter_time_sum)/1000)
+            # print('voltage:', to_volts(battery_pin.value))
+            # print('mem free:', gc.mem_free())
+            # print('iter sum', iter_time_sum, 'max', max_iter_time, 'avg', iter_time_sum/iter_count)
+            # print('sleep sum', sleep_time_sum, 'max', max_sleep_time, 'avg', sleep_time_sum/iter_count)
+            # print('total seconds this cycle', (sleep_time_sum + iter_time_sum)/1000)
             iter_count, max_sleep_time, max_iter_time, iter_time_sum, sleep_time_sum = 0, 0, 0, 0, 0
             last_voltage_report_time = current_time
 
@@ -297,6 +358,9 @@ def main():
                     or previously_pressed
                     or pressed_toggle ):
                 gc.collect()
+
+            # report battery voltage here?
+            # ...
 
         if pressed != previously_pressed:
             print('pressed:', pressed, counter, current_time)
