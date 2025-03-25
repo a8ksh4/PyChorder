@@ -10,14 +10,16 @@ import digitalio
 import analogio
 import usb_hid
 from adafruit_hid.keyboard import Keyboard
+from adafruit_hid.mouse import Mouse
+
 # from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS
 
 # edit this line to change to a different keymap file
-#from keymap_leaf import BATTERY_PIN, PINS, LAYERS, CHORDS, GAME_MODE_LAYER
-from keymap_crkbd_rt import BATTERY_PIN, ROWS, COLS, PINS, REVERSE_DIODES, LAYERS, CHORDS, GAME_MODE_LAYER
+from keymap_leaf import BATTERY_PIN, PINS, ROWS, COLS, LAYERS, CHORDS, GAME_MODE_LAYER, REVERSE_DIODES
+#from keymap_crkbd_r import BATTERY_PIN, ROWS, COLS, PINS, REVERSE_DIODES, LAYERS, CHORDS, GAME_MODE_LAYER
 
 from keymap_translate import KEYMAP_TRANSLATE
-from keys import SHIFTED
+from keys import SHIFTED, MOUSE_CODES
 
 BATTERY_REPORT_INTERVAL = 15000  # in ms
 POLL_FREQUENCY = 100.0  # in Hz
@@ -84,7 +86,7 @@ def get_output_key(buttons, layer, tap):
     return result
 
 
-def activate_keys(buttons_pressed, device):
+def activate_keys(buttons_pressed, device, mouse):
     '''This uses an event based system, tracked in the 'EVENTS' global.
     The general flow is this:
     * An event is generated if the conditions are met - either a pressed key
@@ -170,11 +172,50 @@ def activate_keys(buttons_pressed, device):
                             'status': 'new',
                             'uinput_codes': []
                         }
+            
+            # detect mouse events here
+            if any(k for k in output_key if k in MOUSE_CODES):
+                new_event['status'] = 'mouse'
 
             # print(f'New event: {new_event}')
             EVENTS.append(new_event)
             PENDING_BUTTONS.clear()
             TICKER = 0
+    
+    # handle mouse events here
+    mouse_x, mouse_y, mouse_w= 0, 0, 0
+    m_combos = ((-5, 0, 0, '_mlft'), (5, 0, 0, '_mrgt'), 
+                (0, -5, 0, '_mup'), (0, 5, 0, '_mdwn'),
+                (-5, -5, 0, '_mdul'), (5, -5, 0, '_mdur'), 
+                (-5, 5, 0, '_mddl'), (5, 5, 0, '_mddr'),
+                (0, 0, 1, '_mwup'), (0, 0, -1, '_mwdn'))
+
+    for x_off, y_off, w_off, key_name in m_combos:
+        for event in EVENTS:
+            if key_name in event['output_keys']:
+                mouse_x += x_off
+                mouse_y += y_off
+                mouse_w += w_off
+                if key_name in ('_mwup', '_mwdn'):
+                    event['status'] = 'mouse_done'
+
+    # Check Mouse Wheel Events:
+    # mouse_wheel = 0
+    # for event in EVENTS:
+    #     if event['status'] != 'mouse':
+    #         continue
+        
+    #     if '_mwup' in event['output_keys']:
+    #         print('mouse wheel up')
+    #         mouse_wheel = 1
+    #     elif '_mwdn' in event['output_keys']:
+    #         print('mouse wheel down')
+    #         mouse_wheel = -1
+    #     else:
+    #         continue
+
+    #     event['status'] = 'mouse_done'
+
 
     # Relase keys for ended events
     for event in EVENTS:
@@ -245,6 +286,10 @@ def activate_keys(buttons_pressed, device):
                 time.sleep(0.001)
         last_event['uinput_codes'] = unpress_later
 
+    # Generate mouse movement
+    if mouse_x or mouse_y or mouse_w:
+        mouse.move(mouse_x,mouse_y, mouse_w)
+
 
 def read_pin(pin):
     '''Read a pin, return True if it's pressed.  This provides compatiblilty for 
@@ -265,7 +310,7 @@ time.sleep(1)  # Sleep for a bit to avoid a race condition on some systems
 def main():
     '''Main loop for stuff'''
     keyboard = Keyboard(usb_hid.devices)
-    # keyboard_layout = KeyboardLayoutUS(keyboard)
+    mouse = Mouse(usb_hid.devices)
 
     # Initialize the key pins and analog battery pin
     if ROWS is not None:
@@ -303,17 +348,6 @@ def main():
             else:
                 key_pins.append((row, col))
 
-            # if REVERSE_DIODES:
-            #     col, row = pin
-            # else:
-            #     row, col = pin
-            # key_row = digitalio.DigitalInOut(row)
-            # key_row.direction = digitalio.Direction.OUTPUT
-            # key_row.value = False
-            # key_col = digitalio.DigitalInOut(col)
-            # key_col.direction = digitalio.Direction.INPUT
-            # key_col.pull = digitalio.Pull.UP
-            # key_pins.append((key_row, key_col))
         else:
             key_pin = digitalio.DigitalInOut(pin)
             key_pin.direction = digitalio.Direction.INPUT
@@ -367,7 +401,7 @@ def main():
             previously_pressed = pressed
             # pressed_time = current_time
             last_time = current_time
-            activate_keys(pressed, keyboard)
+            activate_keys(pressed, keyboard, mouse)
             pressed_toggle = True
 
         elif EVENTS and current_time - last_time > 5:
@@ -376,14 +410,14 @@ def main():
             # get activated before any subsequent key presses that depend
             # on the layer change.
             # pressed_time = current_time
-            activate_keys(pressed, keyboard)
+            activate_keys(pressed, keyboard, mouse)
             # pressed_toggle = False
 
         # elif pressed_toggle and (current_time - pressed_time) > HOLDTIME:
         #     activate_keys(pressed, keyboard)
         #     pressed_toggle = False
         elif pressed:
-            activate_keys(pressed, keyboard)
+            activate_keys(pressed, keyboard, mouse)
         iter_time = time_ms() - current_time
         sleep_time = max((0, (1000/POLL_FREQUENCY) - iter_time))
 

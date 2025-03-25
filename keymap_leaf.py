@@ -7,7 +7,10 @@ import keymap_helper
 # PINS = (12, 13, 14, 15,
 #         19, 18, 17, 16)
 BATTERY_PIN = board.GP28
+REVERSE_DIODES = False
 
+ROWS = None
+COLS = None
 PINS = [board.GP4, board.GP3, board.GP2, board.GP1, board.GP0,
         board.GP9, board.GP8, board.GP7, board.GP6, board.GP5,
         board.GP14, board.GP13, board.GP12, board.GP11, board.GP10,
@@ -50,7 +53,7 @@ LAYERS = (
     ('_scup', '_mbt2', '_mup',  '_mbt1', '',
      '_scdn', '_mlft', '_mdwn', '_mrgt', '',
      '', '', '', '', '',
-     '', '', ''),
+     '_mbt1', '_mbt2', '_mbt3'),
 
     # GAME - 5
     ('_set_base_0', '', '_up', '', 'c',
@@ -106,6 +109,8 @@ CHORDS = {
     # Base layer toggle from BASE to GAME
     ('s', 't', 'r', 'a', '-'):   ('_set_base', 5),
     # ('_esc', '_entr', '_tab'):  ('_set_base', 0),
+    ('_mup', '_mlft', '_mrgt'):  ('_set_base', 0),
+    ('i', 'e', 'r'):  ('_set_base', 4),
 
     # Symbol layer addons
     ('(', '}'):             ')',
@@ -142,9 +147,9 @@ CHORDS = {
     # ('_pgdn', '_up', '_end'): '_esc',       # Directional
     # ('_mlft', '_mup', '_mbt1'): '_esc',     # Mouse
 
-    # ('a', 'r', 'e', 'y'):   '_f11',         # Normal        *
-    # ('_down', '_rght', '_up', '_end'): '_f11',  # Directional
-    # ('_mdwn', '_mrgt', '_mup', '_mbt1'): '_f11', # Mouse
+    ('a', 'r', 'e', 'y'):   '_f11',         # Normal        *
+    ('_down', '_rght', '_up', '_end'): '_f11',  # Directional
+    ('_mdwn', '_mrgt', '_mup', '_mbt1'): '_f11', # Mouse
 
     # ('r', 't', 'y', 'i'):   '_alta', #set('_alt', '_tab'),
     # ('t', 's', 'i', 'o'):   '_salta', #set('_shft', '_alt', '_tab'),
